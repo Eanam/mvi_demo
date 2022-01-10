@@ -1,23 +1,23 @@
 package com.eanam.practice.mvi_demo
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.lifecycleScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.eanam.practice.mvi_demo.intent.DoggyIntent
 import com.eanam.practice.mvi_demo.model.entity.Doggy
-import com.eanam.practice.mvi_demo.state.DoggyState
 import com.eanam.practice.mvi_demo.ui.theme.Mvi_demoTheme
 import com.eanam.practice.mvi_demo.viewmodel.DoggyViewModel
-import kotlinx.coroutines.launch
+import com.eanam.practice.state_widget.ComposeState
 
 class MainActivity : ComponentActivity() {
 
@@ -28,36 +28,44 @@ class MainActivity : ComponentActivity() {
         setContent {
             Mvi_demoTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(color = MaterialTheme.colors.background) {
-                    DoggyActivity(vm = vm)
+                Surface(
+                    modifier = Modifier.padding(10.dp),
+                    color = MaterialTheme.colors.background
+                ) {
+                    DoggyActivity(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
+                        vm = vm
+                    )
                 }
             }
-        }
-
-        lifecycleScope.launch {
-            vm.doggyIntent.send(DoggyIntent.FetchDoggy)
         }
     }
 }
 
 @Composable
 fun DoggyActivity(
+    modifier: Modifier,
     vm: DoggyViewModel
 ) {
-    val state = vm.state
-    DoggyScreen(state = state.value)
-}
-
-@Composable
-fun DoggyScreen(
-    state: DoggyState
-) {
-    Log.d("cmoigo", "DoggyScreen: $state")
-    when(state) {
-        is DoggyState.Loading -> LoadingCompose()
-        is DoggyState.Doggys -> DoggyList(data = state.data)
+    Box(
+        modifier = Modifier.width(200.dp).height(200.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        ComposeState(
+            modifier = modifier,
+            pageState = vm.state.value,
+            loading = { vm.doggyIntent.send(DoggyIntent.FetchDoggy) },
+            loadingComponentBlock = { LoadingCompose() },
+            emptyComponentBlock = null,
+            errorComponentBlock = null,
+        ) {
+            DoggyList(data = it.data ?: emptyList())
+        }
     }
 }
+
 
 @Composable
 fun LoadingCompose() {
@@ -66,9 +74,14 @@ fun LoadingCompose() {
 
 @Composable
 fun DoggyList(data: List<Doggy>) {
-    Column {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         data.forEachIndexed { index, item ->
-            Text(text = "$index")
+            Text(
+                modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally),
+                text = "$index"
+            )
         }
     }
 }

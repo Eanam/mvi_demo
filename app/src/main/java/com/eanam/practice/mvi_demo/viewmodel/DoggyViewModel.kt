@@ -5,8 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eanam.practice.mvi_demo.intent.DoggyIntent
+import com.eanam.practice.mvi_demo.model.entity.Doggy
 import com.eanam.practice.mvi_demo.model.repository.local.DoggyRepository
-import com.eanam.practice.mvi_demo.state.DoggyState
+import com.eanam.practice.state_widget.PageData
+import com.eanam.practice.state_widget.PageState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -16,7 +18,7 @@ class DoggyViewModel: ViewModel() {
 
     val doggyIntent = Channel<DoggyIntent>(Channel.UNLIMITED)
 
-    var state = mutableStateOf<DoggyState>(DoggyState.Idle)
+    var state = mutableStateOf<PageState<List<Doggy>>>(PageState(PageData.Loading))
         private set
 
     private val repository by lazy { DoggyRepository() }
@@ -33,9 +35,8 @@ class DoggyViewModel: ViewModel() {
     }
 
     private fun fetchDoggy() {
-        state.value = DoggyState.Loading
         viewModelScope.launch {
-            state.value = DoggyState.Doggys(repository.fetchDoggy())
+            state.value = PageState(PageData.Success(repository.fetchDoggy()))
             Log.d("cmoigo", "fetchDoggy: ${state.value}")
         }
     }
